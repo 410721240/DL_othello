@@ -3,6 +3,17 @@ from othello.OthelloUtil import getValidMoves
 from othello.bots.DeepLearning.OthelloModel import OthelloModel
 from othello.OthelloGame import OthelloGame
 
+weights = [
+[ 500, -100, 100,  50,  50, 100, -100,  500],
+[-100, -200, -50, -50, -50, -50, -200, -100],
+[ 100,  -50,  60,   4,   4, 60,   -50,  100],
+[ 50,   -50,   4,   2,   2,  4,   -50,   50],
+[ 50,   -50,   4,   2,   2,  4,   -50,   50],
+[ 100,  -50,  60,   4,   4,  60,  -50,  100],
+[-100, -200, -50, -50, -50, -50, -200, -100],
+[ 500, -100, 100,  50,  50, 100, -100,  500]]
+weights = np.array(weights, dtype='float32').reshape(64)
+
 class BOT():
 
     def __init__(self, board_size, *args, **kargs):
@@ -24,6 +35,14 @@ class BOT():
         valids=np.zeros((game.size), dtype='int')
         valids[ [i[0]*self.board_size+i[1] for i in valid_positions] ]=1
         predict*=valids
+        
+        if predict.dtype!=type(None):
+            predict = (predict*weights)
+
+        for i in range(len(predict)):
+            if predict[i] != 0:
+                predict[i] = predict[i] * weights[i]
+
         position = np.argmax(predict)
         
         if self.collect_gaming_data:
