@@ -6,10 +6,12 @@ from othello.OthelloUtil import getValidMoves
 from othello.bots.DeepLearning.OthelloModel import OthelloModel
 from othello.OthelloGame import OthelloGame
 from othello.bots.Random import BOT2
+from othello.bots.Minimax import BOT3
 from numpy import random
 
 BOARD_SIZE=8
-bot2=BOT2(board_size=BOARD_SIZE)
+bot2 = BOT2(board_size=BOARD_SIZE)
+bot3 = BOT3(board_size=BOARD_SIZE)
 
 # weights = [
 # [ 500, -100, 100,  50,  50, 100, -100,  500],
@@ -34,7 +36,6 @@ bot2=BOT2(board_size=BOARD_SIZE)
 # weights = np.array(weights, dtype='float32').reshape(64)+201
 
 class BOT():
-
     def __init__(self, board_size, *args, **kargs):
         self.board_size=board_size
         self.model = OthelloModel( input_shape=(self.board_size, self.board_size) )
@@ -51,40 +52,9 @@ class BOT():
     def getAction(self, game, color):
         predict = self.model.predict( game )
         valid_positions=getValidMoves(game, color)
-        temp = np.array(game) #converts game to ndarray; possible types: othelloGame, ndarray
-        minimax = []
-        # print(valid_positions)
-        #gets every valid moves
-        for valid_position in valid_positions:
-            #if only one is possible, breaks
-            if len(valid_positions)==1:
-                minimax.append(1)
-                break
-            
-            #creates clone of 8x8 othelloGame
-            temp_game = OthelloGame(8)
-            #set it as the same as game
-            temp_game.set_board(temp)
-            # temp_game.showBoard()
-            # print(temp)
-
-            x= temp_game.play_one_move(valid_position, color, verbose=False)
-            minimax.append(x)
-            del temp_game
-        minimax = np.array(minimax)
-        
-        
-
         valids=np.zeros((game.size), dtype='int')
-
-        count=0
-        for i in valid_positions:
-            valids[ [i[0]*self.board_size+i[1] ] ]=minimax[count]
-            count+=1
+        valids[ [i[0]*self.board_size+i[1] for i in valid_positions] ]=1
         predict*=valids
-
-        # print(predict)
-
         position = np.argmax(predict)
         
         if self.collect_gaming_data:
@@ -93,9 +63,9 @@ class BOT():
             self.history.append([np.array(game.copy()), tmp, color])
         
         position=(position//self.board_size, position%self.board_size)
-        # print(position)
         return position
-    
+
+   
     def self_play_train(self, args):
         self.collect_gaming_data=True
         def gen_data():
@@ -115,16 +85,20 @@ class BOT():
             self.history=[]
             history=[]
             game=OthelloGame(self.board_size)
-            RANDOM  = random.randint(2)
+            RANDOM  = random.randint(10)
             if RANDOM==0:
-                print('random0')
+                print('random 1')
                 game.play(self, bot2, verbose=True)#args['verbose']
             elif RANDOM==1:
-                print('random1')
+                print('random -1')
                 game.play(bot2, self, verbose=True)
-            # else:
-            #     print('self play')
-            #     game.play(self, self, verbose=True)
+            elif RANDOM%2==0:
+                print('play minimax -1')
+                game.play(bot3, self, verbose=True)
+            else:
+                print('play minimax 1')
+                game.play(self, bot3, verbose=True)
+
             for step, (board, probs, player) in enumerate(self.history):
                 sym = getSymmetries(board, probs)
                 for b,p in sym:
