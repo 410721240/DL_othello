@@ -1,8 +1,10 @@
 from AIGamePlatform import Othello
-#from othello.bots.Random import BOT
+# from othello.bots.Random import BOT2
 from othello import OthelloGame
 from othello.bots.DeepLearning import BOT
 import time
+from othello.OthelloGame import OthelloGame
+import numpy as np
 
 
 
@@ -14,7 +16,7 @@ class Human:
         
 BOARD_SIZE=8
 bot=BOT(board_size=BOARD_SIZE)
-
+# bot=BOT2(board_size=BOARD_SIZE)
 args={
     'num_of_generate_data_for_train': 8,
     'epochs': 5,
@@ -30,3 +32,11 @@ def _callback_(board, color): # 函數名稱可以自訂，board是當前盤面�
     time.sleep(0.5)
     return bot.getAction(board, color) # 回傳要落子的座標
 
+
+# test = np.zeros((8,8), dtype='int')
+# game = OthelloGame(BOARD_SIZE)
+# game.set_board(board=test)
+# print(game)
+# # print(test)
+# testreturn = bot.getAction(test, 1)
+# print(testreturn)

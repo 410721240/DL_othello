@@ -2,8 +2,7 @@ import websocket, threading, json, numpy as np
 
 class CompetitionSocket(websocket.WebSocketApp):
     server_url='ws://134.208.2.2:8082'
-    # server_url='ws://10.21.23.46:8080'
-    # server_url='ws://10.21.23.172:8080'
+    # server_url='ws://163.22.21.143:8082'
     
     def __init__(self, competition_id, token, move_event_callback):
         self.competition_id=competition_id

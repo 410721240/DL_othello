@@ -1,9 +1,25 @@
 import numpy as np
+from tensorflow.python.ops.gen_math_ops import Max
 from othello.OthelloUtil import getValidMoves, executeMove, isValidMove
+from sklearn.preprocessing import MinMaxScaler
+
+
 
 class OthelloGame(np.ndarray):
     BLACK = 1
     WHITE = -1
+    weights = [
+    [ 500, -100, 100,  50,  50, 100, -100,  500],
+    [-100, -200, -50, -50, -50, -50, -200, -100],
+    [ 100,  -50,  60,   4,   4, 60,   -50,  100],
+    [ 50,   -50,   4,   2,   2,  4,   -50,   50],
+    [ 50,   -50,   4,   2,   2,  4,   -50,   50],
+    [ 100,  -50,  60,   4,   4,  60,  -50,  100],
+    [-100, -200, -50, -50, -50, -50, -200, -100],
+    [ 500, -100, 100,  50,  50, 100, -100,  500]]
+    weights = np.array(weights, dtype='float32').reshape(64,-1)
+    weights=MinMaxScaler(feature_range=(1, 10)).fit(weights).transform(weights)
+
     
     def __new__(cls, n):
         return super().__new__(cls, shape=(n,n), dtype='int')
@@ -23,7 +39,10 @@ class OthelloGame(np.ndarray):
             self.current_player=-self.current_player
         else:
             raise Exception('invalid move')
-    
+
+    def set_board(self, board):
+        self[:] = board
+
     def isEndGame(self):
         white_valid_moves=len(getValidMoves(self, OthelloGame.WHITE))
         black_valid_moves=len(getValidMoves(self, OthelloGame.BLACK))
@@ -56,6 +75,7 @@ class OthelloGame(np.ndarray):
                 position=black.getAction(self.clone(), self.current_player)
             try:
                 self.move(position)
+                
             except:
                 if verbose:
                     print('invalid move', end='\n\n')
@@ -67,6 +87,61 @@ class OthelloGame(np.ndarray):
             print()
             print('Winner:', self.isEndGame())
         return self.isEndGame()
+
+    def play_one_move(self, position, color, verbose=True):
+        self.current_player = color
+        if verbose:
+                print('{:#^30}'.format( ' Player '+str(self.current_player)+' ' ))
+                self.showBoard()
+        if len(getValidMoves(self, self.current_player))==0:
+            if verbose:
+                print('no valid move, next player')
+            self.current_player=-self.current_player
+
+        # print(self.current_player)
+        pre = getValidMoves(self, self.current_player)
+        final_score=self.weights[pre[0][0]*8+pre[0][1]]
+        self.move(position)
+        valid_positions = getValidMoves(self, self.current_player)
+        # print(valid_positions)
+        # print(self.current_player)
+        # print(valid_positions)
+
+        minimax=[]
+        # print('=======in minimax 1======')
+        # print(valid_positions)
+        if len(valid_positions)==0:
+            return final_score
+
+        for valid_position in valid_positions:
+            if len(valid_positions)==1:
+                minimax.append(self.weights[valid_position[0]*8+valid_position[1]])
+                break
+            temp_game = self.clone()
+            x= temp_game.play_max(valid_position, verbose=False)
+            minimax.append(x)
+            del temp_game
+        # if minimax == []:
+        #     for i in valid_positions:
+        #         minimax.append(self.weights[i[0]*8+i[1]])
+        return np.min(minimax)
+
+    def play_max(self, position, verbose=True):
+        if verbose:
+                print('{:#^30}'.format( ' Player '+str(self.current_player)+' ' ))
+                self.showBoard()
+        if len(getValidMoves(self, self.current_player))==0:
+            if verbose:
+                print('no valid move, next player')
+            self.current_player=-self.current_player
+        self.move(position)
+        valid_positions = getValidMoves(self, self.current_player)
+        
+        valids=np.zeros((self.size), dtype='int')
+        valids[ [i[0]*8+i[1] for i in valid_positions] ]=1
+        # print('amax=====')
+        # print(np.amax(self.weights*valids))
+        return np.amax(self.weights*valids)   
     
     def showBoard(self):
         corner_offset_format='{:^'+str(len(str(self.n))+1)+'}'
