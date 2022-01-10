@@ -88,16 +88,16 @@ class BOT():
             RANDOM  = random.randint(10)
             if RANDOM==0:
                 print('random 1')
-                game.play(self, bot2, verbose=True)#args['verbose']
+                game.play(self, bot2, verbose=False)#args['verbose']
             elif RANDOM==1:
                 print('random -1')
-                game.play(bot2, self, verbose=True)
+                game.play(bot2, self, verbose=False)
             elif RANDOM%2==0:
                 print('play minimax -1')
-                game.play(bot3, self, verbose=True)
+                game.play(bot3, self, verbose=False)
             else:
                 print('play minimax 1')
-                game.play(self, bot3, verbose=True)
+                game.play(self, bot3, verbose=False)
 
             for step, (board, probs, player) in enumerate(self.history):
                 sym = getSymmetries(board, probs)
@@ -108,12 +108,16 @@ class BOT():
             return [(x[0],x[1]) for x in history if (game_result==0 or x[2]==game_result)]
         
         data=[]
+        # print(self.collect_gaming_data)
+        # print(data)
         for i in range(args['num_of_generate_data_for_train']):
             if args['verbose']:
                 print('self playing', i+1)
             data+=gen_data()
+        # print(data)
         
         self.collect_gaming_data=False
+        # print(self.collect_gaming_data)
         
         self.model.fit(data, batch_size = args['batch_size'], epochs = args['epochs'])
         self.model.save_weights()

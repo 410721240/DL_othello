@@ -27,6 +27,7 @@ class BOT3():
             minimax.append(x)
             del temp_game
         minimax = np.array(minimax)
+        # print(minimax)
 
         valids=np.zeros((game.size), dtype='int')
 
@@ -38,4 +39,5 @@ class BOT3():
         position = np.argmax(valids)
         
         position=(position//self.board_size, position%self.board_size)
+        # print(position)
         return position

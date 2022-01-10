@@ -9,16 +9,16 @@ class OthelloGame(np.ndarray):
     BLACK = 1
     WHITE = -1
     weights = [
-    [ 500, -100, 100,  50,  50, 100, -100,  500],
-    [-100, -200, -50, -50, -50, -50, -200, -100],
-    [ 100,  -50,  60,   4,   4, 60,   -50,  100],
-    [ 50,   -50,   4,   2,   2,  4,   -50,   50],
-    [ 50,   -50,   4,   2,   2,  4,   -50,   50],
-    [ 100,  -50,  60,   4,   4,  60,  -50,  100],
-    [-100, -200, -50, -50, -50, -50, -200, -100],
-    [ 500, -100, 100,  50,  50, 100, -100,  500]]
+    [ 80, -26, 24,  -1,  -5, 28, -18,  76],
+    [-23, -39, -18, -9, -6, -8, -39, -1],
+    [ 46,  -16,  4,   1,   -3, 6,   -20,  52],
+    [ -13,   -5,   2,   -1,   4,  3,   -12,   -2],
+    [ -5,   -6,   1,   -2,   -3,  0,   -9,   -5],
+    [ 48,  -13,  12,   5,   0,  5,  -24,  41],
+    [-27, -53, -11, -1, -11, -16, -58, -15],
+    [ 87, -25, 27,  -1,  5, 36, -3,  100]]
     weights = np.array(weights, dtype='float32').reshape(64,-1)
-    weights=MinMaxScaler(feature_range=(1, 10)).fit(weights).transform(weights)
+    weights=MinMaxScaler(feature_range=(1, 50)).fit(weights).transform(weights).reshape(64)
 
     
     def __new__(cls, n):
@@ -102,6 +102,19 @@ class OthelloGame(np.ndarray):
         pre = getValidMoves(self, self.current_player)
         final_score=self.weights[pre[0][0]*8+pre[0][1]]
         self.move(position)
+        #if killer move wins, use it
+        white_valid_moves=len(getValidMoves(self, OthelloGame.WHITE))
+        black_valid_moves=len(getValidMoves(self, OthelloGame.BLACK))
+        if white_valid_moves==0 and black_valid_moves==0:
+            v,c=np.unique(self, return_counts=True)
+            white_count=c[np.where(v==OthelloGame.WHITE)]
+            black_count=c[np.where(v==OthelloGame.BLACK)]
+            if color==1 and black_count>white_count:
+                return 100
+            if color==-1 and black_count<white_count:
+                return 100
+
+
         valid_positions = getValidMoves(self, self.current_player)
         # print(valid_positions)
         # print(self.current_player)
