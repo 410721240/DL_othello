@@ -5,6 +5,7 @@ from othello.bots.DeepLearning import BOT
 import time
 from othello.OthelloGame import OthelloGame
 import numpy as np
+from othello.bots.Minimax import BOT3
 
 
 
@@ -17,6 +18,7 @@ class Human:
 BOARD_SIZE=8
 bot=BOT(board_size=BOARD_SIZE)
 # bot=BOT2(board_size=BOARD_SIZE)
+# bot=BOT3(board_size=BOARD_SIZE)
 args={
     'num_of_generate_data_for_train': 8,
     'epochs': 5,

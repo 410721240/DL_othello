@@ -94,10 +94,10 @@ class BOT():
                 game.play(bot2, self, verbose=False)
             elif RANDOM%2==0:
                 print('play minimax -1')
-                game.play(bot3, self, verbose=False)
+                game.play(bot3, self, verbose=True)
             else:
                 print('play minimax 1')
-                game.play(self, bot3, verbose=False)
+                game.play(self, bot3, verbose=True)
 
             for step, (board, probs, player) in enumerate(self.history):
                 sym = getSymmetries(board, probs)

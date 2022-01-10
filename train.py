@@ -13,9 +13,6 @@ args={
 iterations = 5000
 
 for _ in range(iterations):
-    try:
-        bot.self_play_train(args)
-    except:
-        continue
+    bot.self_play_train(args)
 
 

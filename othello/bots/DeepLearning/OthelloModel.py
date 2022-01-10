@@ -44,7 +44,7 @@ class OthelloModel():
         self.model.save_weights('othello/bots/DeepLearning/models/'+self.model_name)
     
     def load_weights(self):
-        self.model.load_weights('othello/bots/DeepLearning/models/'+self.model_name)
+        self.model.load_weights('othello/bots/DeepLearning/models/'+self.model_name)#colab.h5
     
     def reset(self, confirm=False):
         if not confirm:

@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.base import clone
 from tensorflow.python.ops.gen_math_ops import Max
 from othello.OthelloUtil import getValidMoves, executeMove, isValidMove
 from sklearn.preprocessing import MinMaxScaler
@@ -8,17 +9,35 @@ from sklearn.preprocessing import MinMaxScaler
 class OthelloGame(np.ndarray):
     BLACK = 1
     WHITE = -1
-    weights = [
-    [ 80, -26, 24,  -1,  -5, 28, -18,  76],
-    [-23, -39, -18, -9, -6, -8, -39, -1],
-    [ 46,  -16,  4,   1,   -3, 6,   -20,  52],
-    [ -13,   -5,   2,   -1,   4,  3,   -12,   -2],
-    [ -5,   -6,   1,   -2,   -3,  0,   -9,   -5],
-    [ 48,  -13,  12,   5,   0,  5,  -24,  41],
-    [-27, -53, -11, -1, -11, -16, -58, -15],
-    [ 87, -25, 27,  -1,  5, 36, -3,  100]]
-    weights = np.array(weights, dtype='float32').reshape(64,-1)
-    weights=MinMaxScaler(feature_range=(1, 50)).fit(weights).transform(weights).reshape(64)
+    # weights = [
+    # [ 80, -26, 24,  -1,  -5, 28, -18,  76],
+    # [-23, -39, -18, -9, -6, -8, -39, -1],
+    # [ 46,  -16,  4,   1,   -3, 6,   -20,  52],
+    # [ -13,   -5,   2,   -1,   4,  3,   -12,   -2],
+    # [ -5,   -6,   1,   -2,   -3,  0,   -9,   -5],
+    # [ 48,  -13,  12,   5,   0,  5,  -24,  41],
+    # [-27, -53, -11, -1, -11, -16, -58, -15],
+    # [ 87, -25, 27,  -1,  5, 36, -3,  100]]
+    # weights = np.array(weights, dtype='float32').reshape(64,-1)
+    # weights=MinMaxScaler(feature_range=(1, 50)).fit(weights).transform(weights).reshape(64)
+    weights1 = np.array([[99,-8,8,6,6,8,-8,99],
+           [-8,-24,-4,-3,-3,-4,-24,-8],
+           [8,-4,7,4,4,7,-4,8],
+           [6,-3,4,1,1,4,-3,6],
+           [6,-3,4,1,1,4,-3,6],
+           [8,-4,7,4,4,7,-4,8],
+           [-8,-24,-4,-3,-3,-4,-24,-8],
+           [99,-8,8,6,6,8,-8,99]], dtype='float32')
+
+    weights = np.array([
+        [500, -100, 100, 50, 50, 100, -100, 500],
+    [ -100, -200, -50, -50, -50, -50, -200, -100],
+    [  100, -50,60, 4, 4, 60, -50, 100],
+    [  50, -50,4, 2, 2, 4, -50, 50],
+    [ 50, -50, 4, 2, 2, 4, -50, 50],
+    [ 100, -50, 60, 4, 4, 60, -50, 100],
+        [-100, -200, -50, -50, -50, -50, -200, -100],
+        [500, -100, 100, 50, 50, 100, -100, 500]], dtype='float32')
 
     
     def __new__(cls, n):
@@ -87,6 +106,74 @@ class OthelloGame(np.ndarray):
             print()
             print('Winner:', self.isEndGame())
         return self.isEndGame()
+    
+    def get_minimax(self, position, color, layer, alpha, beta ,maximizingPlayer,verbose=True,):
+        self.current_player = color
+        # print(getValidMoves(self, self.current_player))
+        # print(position)
+        self.move(position)
+        if layer==0 or self.isEndGame()!=None:
+            # print(layer)
+            # print(self.evaluate(color,maximizingPlayer))
+            return self.evaluate(color,maximizingPlayer)
+        if verbose:
+            print('========' + str(layer) +'=======')
+            self.showBoard()
+        
+        
+        
+
+        valid_positions = getValidMoves(self, self.current_player)
+        if maximizingPlayer:
+            maxEval=-1000
+            for validposition in valid_positions:
+                clone1 = self.clone()
+                eval = clone1.get_minimax(validposition, self.current_player, layer-1, alpha, beta, maximizingPlayer=False, verbose=verbose)
+                maxEval = np.amax([maxEval, eval])
+                alpha = np.amax([alpha,eval])
+                if beta <= alpha:
+                    break
+            return maxEval
+        else:
+            minEval = 1000.0
+            for validposition in valid_positions:
+                clone1 = self.clone()
+                eval = clone1.get_minimax(validposition, self.current_player,layer-1, alpha, beta, maximizingPlayer=True, verbose=verbose)
+                minEval = np.min([minEval, eval])
+                beta = np.min([beta,eval])
+                if beta<= alpha:
+                    break
+            return minEval
+
+
+    def evaluate(self, color, maximizingPlayer):
+        v,c=np.unique(self, return_counts=True)
+        white_count=c[np.where(v==OthelloGame.WHITE)]
+        black_count=c[np.where(v==OthelloGame.BLACK)]
+        total = white_count+black_count
+
+        score = 0
+        if maximizingPlayer:
+            for i in range(self.n):
+                for j in range(self.n):
+                    if self[i][j] == color:
+                        if total<32:
+                            score += self.weights[i][j]
+                        else:
+                            score += self.weights1[i][j]
+            return score
+        else:
+            for i in range(self.n):
+                for j in range(self.n):
+                    if self[i][j] == -color:
+                        if total<32:
+                            score += self.weights[i][j]
+                        else:
+                            score += self.weights1[i][j]
+            return score
+            
+
+
 
     def play_one_move(self, position, color, verbose=True):
         self.current_player = color
